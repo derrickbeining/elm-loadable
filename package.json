@@ -1,0 +1,24 @@
+{
+  "name": "elm-loaded",
+  "version": "1.0.0",
+  "description": "",
+  "main": "null",
+  "scripts": {
+    "test": "elm-test",
+    "author-docs": "elm-doc-preview"
+  },
+  "keywords": [
+    "elm"
+  ],
+  "author": "Derrick Beining",
+  "license": "MIT",
+  "devDependencies": {
+    "elm": "^0.19.1-5",
+    "elm-analyse": "^0.16.5",
+    "elm-doc-preview": "^5.0.5",
+    "elm-format": "^0.8.5",
+    "elm-json": "^0.2.10",
+    "elm-test": "^0.19.1-revision7",
+    "elm-verify-examples": "^5.0.0"
+  }
+}

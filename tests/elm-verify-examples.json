@@ -1,0 +1,7 @@
+{
+  "root": "../src",
+  "tests": [
+    "Loaded.Result",
+    "Loaded.Result.Lazy"
+  ]
+}
