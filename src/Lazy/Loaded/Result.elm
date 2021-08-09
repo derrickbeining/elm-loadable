@@ -11,7 +11,7 @@ module Lazy.Loaded.Result exposing
 {-| `LazyLoadedResult` models data which...
 
 1.  Needs to be loaded
-2.  Does _NOT_ begin loading immediately
+2.  Does _NOT_ begin loading immediately and may never begin to load
 3.  May load incrementally
 4.  May fail to load
 5.  May reload

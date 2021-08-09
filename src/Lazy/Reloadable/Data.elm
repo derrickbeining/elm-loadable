@@ -3,7 +3,7 @@ module Lazy.Reloadable.Data exposing (LazyReloadableData(..))
 {-| `LazyReloadableData` models data which...
 
 1.  Needs to be loaded
-2.  Does NOT begin loading immediately and may never load but only when required
+2.  Does NOT begin loading immediately and may never begin to load but only when required
 3.  May load incrementally
 4.  Cannot fail to load
 5.  May reload

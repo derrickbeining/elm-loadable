@@ -10,7 +10,7 @@ module Lazy.Reloadable.Result exposing
 {-| `LazyReloadableResult` models data which...
 
 1.  Needs to be loaded
-2.  Does NOT begin loading immediately and may never load
+2.  Does NOT begin loading immediately and may never begin to load
 3.  May load incrementally
 4.  May fail to load
 5.  May reload
