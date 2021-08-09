@@ -23,7 +23,7 @@ import Loaded.Progress exposing (Progress)
 {-| Indicates whether or not the data is being reloaded
 -}
 type ReloadStatus
-    = Inert
+    = NotReloading
     | Reloading Progress
 
 
@@ -31,7 +31,7 @@ type ReloadStatus
 -}
 isInert : ReloadStatus -> Bool
 isInert =
-    (==) Inert
+    (==) NotReloading
 
 
 {-| Predicates that the status is `Reloading`

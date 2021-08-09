@@ -1,6 +1,8 @@
 module Loaded.Progress exposing
     ( Progress(..), Percent
-    , mkPercent, getPercent, percentToFloat
+    , mkPercent
+    , getPercent, percentToFloat
+    , isUntracked, isPercentage
     )
 
 {-|
@@ -11,9 +13,19 @@ module Loaded.Progress exposing
 @docs Progress, Percent
 
 
-# Functions
+# Constructors
 
-@docs mkPercent, getPercent, percentToFloat
+@docs mkPercent
+
+
+# Destructors
+
+@docs getPercent, percentToFloat
+
+
+# Guards
+
+@docs isUntracked, isPercentage
 
 -}
 
@@ -32,18 +44,40 @@ type Percent
     = Percent Float
 
 
+{-| -}
+isUntracked : Progress -> Bool
+isUntracked progress =
+    case progress of
+        Untracked ->
+            True
+
+        Percentage _ ->
+            False
+
+
+{-| -}
+isPercentage : Progress -> Bool
+isPercentage progress =
+    case progress of
+        Untracked ->
+            False
+
+        Percentage _ ->
+            True
+
+
 {-| A smart constructor for [Percent](#Percent). The provided
 [Float](Basics#Float) should be between `0` and `1` inclusive. Any value
 outside that range will be clamped to the nearest value in range.
 
-        mkPercent -1
-        --> Percent 0
+        mkPercent -1 == mkPercent 0
+        --> True
 
-        mkPercent 0.5
-        --> Percent 0.5
+        mkPercent 0.5 == mkPercent 0.5
+        --> True
 
-        mkPercent 1.5
-        --> Percent 1
+        mkPercent 1.5 == mkPercent 1
+        --> True
 
 -}
 mkPercent : Float -> Percent

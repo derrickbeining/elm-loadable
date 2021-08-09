@@ -1,5 +1,5 @@
-module Loaded.Result.Nonce.Lazy exposing
-    ( LazyLoadedResultNonce(..)
+module Lazy.Loaded.Result exposing
+    ( LazyLoadedResult(..)
     , singleton, fromMaybe, fromResult
     , fold, withDefault, extract, getError
     , toMaybe, toResult, toTask
@@ -8,7 +8,7 @@ module Loaded.Result.Nonce.Lazy exposing
     , andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, filter, filterMap, flatten, join, map, map2, map3, map4, map5, mapError, sequenceArray, sequenceList, traverseArray, traverseList
     )
 
-{-| LazyLoadedResultNonce models data which
+{-| LazyLoadedResult models data which
 
 1.  Needs to be loaded
 2.  Does _NOT_ begin loading immediately
@@ -19,7 +19,7 @@ module Loaded.Result.Nonce.Lazy exposing
 
 # Model
 
-@docs LazyLoadedResultNonce
+@docs LazyLoadedResult
 
 
 # Constructors
@@ -57,11 +57,11 @@ import Task exposing (Task)
 
 
 {-| -}
-type LazyLoadedResultNonce e a
+type LazyLoadedResult error value
     = Initial
     | Pending Progress
-    | Failure e
-    | Done a
+    | Failure error
+    | Done value
 
 
 
@@ -69,13 +69,13 @@ type LazyLoadedResultNonce e a
 
 
 {-| -}
-singleton : a -> LazyLoadedResultNonce e a
+singleton : a -> LazyLoadedResult e a
 singleton a =
     Done a
 
 
 {-| -}
-fromMaybe : Maybe a -> LazyLoadedResultNonce e a
+fromMaybe : Maybe a -> LazyLoadedResult e a
 fromMaybe ma =
     case ma of
         Nothing ->
@@ -86,7 +86,7 @@ fromMaybe ma =
 
 
 {-| -}
-fromResult : Result e a -> LazyLoadedResultNonce e a
+fromResult : Result e a -> LazyLoadedResult e a
 fromResult result =
     case result of
         Err err ->
@@ -101,7 +101,7 @@ fromResult result =
 
 
 {-| -}
-fold : (() -> val) -> (() -> val) -> (err -> val) -> (a -> val) -> LazyLoadedResultNonce err a -> val
+fold : (() -> val) -> (() -> val) -> (err -> val) -> (a -> val) -> LazyLoadedResult err a -> val
 fold onInitial onPending onFailure onDone result =
     case result of
         Initial ->
@@ -118,7 +118,7 @@ fold onInitial onPending onFailure onDone result =
 
 
 {-| -}
-withDefault : a -> LazyLoadedResultNonce e a -> a
+withDefault : a -> LazyLoadedResult e a -> a
 withDefault fallback fa =
     case fa of
         Done val ->
@@ -129,7 +129,7 @@ withDefault fallback fa =
 
 
 {-| -}
-extract : (Maybe err -> a) -> LazyLoadedResultNonce err a -> a
+extract : (Maybe err -> a) -> LazyLoadedResult err a -> a
 extract recover result =
     case result of
         Initial ->
@@ -146,7 +146,7 @@ extract recover result =
 
 
 {-| -}
-getError : LazyLoadedResultNonce err a -> Maybe err
+getError : LazyLoadedResult err a -> Maybe err
 getError result =
     case result of
         Failure err ->
@@ -161,7 +161,7 @@ getError result =
 
 
 {-| -}
-isInitial : LazyLoadedResultNonce e a -> Bool
+isInitial : LazyLoadedResult e a -> Bool
 isInitial data =
     case data of
         Initial ->
@@ -172,7 +172,7 @@ isInitial data =
 
 
 {-| -}
-isPending : LazyLoadedResultNonce e a -> Bool
+isPending : LazyLoadedResult e a -> Bool
 isPending data =
     case data of
         Pending _ ->
@@ -183,7 +183,7 @@ isPending data =
 
 
 {-| -}
-isFailure : LazyLoadedResultNonce e a -> Bool
+isFailure : LazyLoadedResult e a -> Bool
 isFailure data =
     case data of
         Failure _ ->
@@ -194,7 +194,7 @@ isFailure data =
 
 
 {-| -}
-isDone : LazyLoadedResultNonce e a -> Bool
+isDone : LazyLoadedResult e a -> Bool
 isDone data =
     case data of
         Done _ ->
@@ -209,7 +209,7 @@ isDone data =
 
 
 {-| -}
-map : (a -> b) -> LazyLoadedResultNonce e a -> LazyLoadedResultNonce e b
+map : (a -> b) -> LazyLoadedResult e a -> LazyLoadedResult e b
 map f data =
     case data of
         Initial ->
@@ -226,7 +226,7 @@ map f data =
 
 
 {-| -}
-mapError : (x -> y) -> LazyLoadedResultNonce x a -> LazyLoadedResultNonce y a
+mapError : (x -> y) -> LazyLoadedResult x a -> LazyLoadedResult y a
 mapError f result =
     case result of
         Initial ->
@@ -243,13 +243,13 @@ mapError f result =
 
 
 {-| -}
-bimap : (err -> e) -> (a -> b) -> LazyLoadedResultNonce err a -> LazyLoadedResultNonce e b
+bimap : (err -> e) -> (a -> b) -> LazyLoadedResult err a -> LazyLoadedResult e b
 bimap onErr onDone result =
     result |> map onDone |> mapError onErr
 
 
 {-| -}
-flatten : LazyLoadedResultNonce e (LazyLoadedResultNonce e a) -> LazyLoadedResultNonce e a
+flatten : LazyLoadedResult e (LazyLoadedResult e a) -> LazyLoadedResult e a
 flatten data =
     case data of
         Initial ->
@@ -266,22 +266,22 @@ flatten data =
 
 
 {-| -}
-join : LazyLoadedResultNonce e (LazyLoadedResultNonce e a) -> LazyLoadedResultNonce e a
+join : LazyLoadedResult e (LazyLoadedResult e a) -> LazyLoadedResult e a
 join =
     flatten
 
 
 {-| -}
 apply :
-    LazyLoadedResultNonce e a
-    -> LazyLoadedResultNonce e (a -> b)
-    -> LazyLoadedResultNonce e b
+    LazyLoadedResult e a
+    -> LazyLoadedResult e (a -> b)
+    -> LazyLoadedResult e b
 apply fa fAtoB =
     flatten <| map (\f -> fa |> map (\a -> f a)) fAtoB
 
 
 {-| -}
-andMap : LazyLoadedResultNonce e a -> LazyLoadedResultNonce e (a -> b) -> LazyLoadedResultNonce e b
+andMap : LazyLoadedResult e a -> LazyLoadedResult e (a -> b) -> LazyLoadedResult e b
 andMap =
     apply
 
@@ -289,9 +289,9 @@ andMap =
 {-| -}
 map2 :
     (a -> b -> c)
-    -> LazyLoadedResultNonce e a
-    -> LazyLoadedResultNonce e b
-    -> LazyLoadedResultNonce e c
+    -> LazyLoadedResult e a
+    -> LazyLoadedResult e b
+    -> LazyLoadedResult e c
 map2 f fa ga =
     Done f
         |> apply fa
@@ -301,10 +301,10 @@ map2 f fa ga =
 {-| -}
 map3 :
     (a -> b -> c -> d)
-    -> LazyLoadedResultNonce e a
-    -> LazyLoadedResultNonce e b
-    -> LazyLoadedResultNonce e c
-    -> LazyLoadedResultNonce e d
+    -> LazyLoadedResult e a
+    -> LazyLoadedResult e b
+    -> LazyLoadedResult e c
+    -> LazyLoadedResult e d
 map3 f fa ga ha =
     Done f
         |> apply fa
@@ -315,11 +315,11 @@ map3 f fa ga ha =
 {-| -}
 map4 :
     (a -> b -> c -> d -> e)
-    -> LazyLoadedResultNonce err a
-    -> LazyLoadedResultNonce err b
-    -> LazyLoadedResultNonce err c
-    -> LazyLoadedResultNonce err d
-    -> LazyLoadedResultNonce err e
+    -> LazyLoadedResult err a
+    -> LazyLoadedResult err b
+    -> LazyLoadedResult err c
+    -> LazyLoadedResult err d
+    -> LazyLoadedResult err e
 map4 f fa ga ha ia =
     Done f
         |> apply fa
@@ -331,12 +331,12 @@ map4 f fa ga ha ia =
 {-| -}
 map5 :
     (a -> b -> c -> d -> e -> f)
-    -> LazyLoadedResultNonce err a
-    -> LazyLoadedResultNonce err b
-    -> LazyLoadedResultNonce err c
-    -> LazyLoadedResultNonce err d
-    -> LazyLoadedResultNonce err e
-    -> LazyLoadedResultNonce err f
+    -> LazyLoadedResult err a
+    -> LazyLoadedResult err b
+    -> LazyLoadedResult err c
+    -> LazyLoadedResult err d
+    -> LazyLoadedResult err e
+    -> LazyLoadedResult err f
 map5 f fa ga ha ia ja =
     Done f
         |> apply fa
@@ -348,19 +348,19 @@ map5 f fa ga ha ia ja =
 
 {-| -}
 andThen :
-    (a -> LazyLoadedResultNonce e b)
-    -> LazyLoadedResultNonce e a
-    -> LazyLoadedResultNonce e b
+    (a -> LazyLoadedResult e b)
+    -> LazyLoadedResult e a
+    -> LazyLoadedResult e b
 andThen f fa =
     flatten <| map f fa
 
 
 {-| -}
 andThen2 :
-    (a -> b -> LazyLoadedResultNonce e c)
-    -> LazyLoadedResultNonce e a
-    -> LazyLoadedResultNonce e b
-    -> LazyLoadedResultNonce e c
+    (a -> b -> LazyLoadedResult e c)
+    -> LazyLoadedResult e a
+    -> LazyLoadedResult e b
+    -> LazyLoadedResult e c
 andThen2 f fa fb =
     Done f
         |> apply fa
@@ -370,11 +370,11 @@ andThen2 f fa fb =
 
 {-| -}
 andThen3 :
-    (a -> b -> c -> LazyLoadedResultNonce e d)
-    -> LazyLoadedResultNonce e a
-    -> LazyLoadedResultNonce e b
-    -> LazyLoadedResultNonce e c
-    -> LazyLoadedResultNonce e d
+    (a -> b -> c -> LazyLoadedResult e d)
+    -> LazyLoadedResult e a
+    -> LazyLoadedResult e b
+    -> LazyLoadedResult e c
+    -> LazyLoadedResult e d
 andThen3 f fa fb fc =
     Done f
         |> apply fa
@@ -385,12 +385,12 @@ andThen3 f fa fb fc =
 
 {-| -}
 andThen4 :
-    (a -> b -> c -> d -> LazyLoadedResultNonce err e)
-    -> LazyLoadedResultNonce err a
-    -> LazyLoadedResultNonce err b
-    -> LazyLoadedResultNonce err c
-    -> LazyLoadedResultNonce err d
-    -> LazyLoadedResultNonce err e
+    (a -> b -> c -> d -> LazyLoadedResult err e)
+    -> LazyLoadedResult err a
+    -> LazyLoadedResult err b
+    -> LazyLoadedResult err c
+    -> LazyLoadedResult err d
+    -> LazyLoadedResult err e
 andThen4 f fa fb fc fd =
     Done f
         |> apply fa
@@ -402,13 +402,13 @@ andThen4 f fa fb fc fd =
 
 {-| -}
 andThen5 :
-    (a -> b -> c -> d -> e -> LazyLoadedResultNonce err f)
-    -> LazyLoadedResultNonce err a
-    -> LazyLoadedResultNonce err b
-    -> LazyLoadedResultNonce err c
-    -> LazyLoadedResultNonce err d
-    -> LazyLoadedResultNonce err e
-    -> LazyLoadedResultNonce err f
+    (a -> b -> c -> d -> e -> LazyLoadedResult err f)
+    -> LazyLoadedResult err a
+    -> LazyLoadedResult err b
+    -> LazyLoadedResult err c
+    -> LazyLoadedResult err d
+    -> LazyLoadedResult err e
+    -> LazyLoadedResult err f
 andThen5 f fa fb fc fd fe =
     Done f
         |> apply fa
@@ -420,7 +420,7 @@ andThen5 f fa fb fc fd fe =
 
 
 {-| -}
-toResult : Result e a -> LazyLoadedResultNonce e a -> Result e a
+toResult : Result e a -> LazyLoadedResult e a -> Result e a
 toResult fallback result =
     case result of
         Initial ->
@@ -437,7 +437,7 @@ toResult fallback result =
 
 
 {-| -}
-toMaybe : LazyLoadedResultNonce e a -> Maybe a
+toMaybe : LazyLoadedResult e a -> Maybe a
 toMaybe result =
     case result of
         Done val ->
@@ -448,7 +448,7 @@ toMaybe result =
 
 
 {-| -}
-toTask : Result err a -> LazyLoadedResultNonce err a -> Task err a
+toTask : Result err a -> LazyLoadedResult err a -> Task err a
 toTask fallback result =
     case toResult fallback result of
         Err err ->
@@ -459,7 +459,7 @@ toTask fallback result =
 
 
 {-| -}
-filter : (a -> Bool) -> LazyLoadedResultNonce e a -> LazyLoadedResultNonce e a
+filter : (a -> Bool) -> LazyLoadedResult e a -> LazyLoadedResult e a
 filter test result =
     result
         |> andThen
@@ -473,7 +473,7 @@ filter test result =
 
 
 {-| -}
-filterMap : (a -> LazyLoadedResultNonce e (Maybe b)) -> LazyLoadedResultNonce e a -> LazyLoadedResultNonce e b
+filterMap : (a -> LazyLoadedResult e (Maybe b)) -> LazyLoadedResult e a -> LazyLoadedResult e b
 filterMap f result =
     result
         |> andThen f
@@ -481,37 +481,37 @@ filterMap f result =
 
 
 {-| -}
-sequenceList : List (LazyLoadedResultNonce e a) -> LazyLoadedResultNonce e (List a)
+sequenceList : List (LazyLoadedResult e a) -> LazyLoadedResult e (List a)
 sequenceList fas =
     List.foldr (map2 (::)) (Done []) fas
 
 
 {-| -}
-traverseList : (a -> LazyLoadedResultNonce err b) -> List (LazyLoadedResultNonce err a) -> LazyLoadedResultNonce err (List b)
+traverseList : (a -> LazyLoadedResult err b) -> List (LazyLoadedResult err a) -> LazyLoadedResult err (List b)
 traverseList f =
     List.map (andThen f) >> sequenceList
 
 
 {-| -}
-sequenceArray : Array (LazyLoadedResultNonce e a) -> LazyLoadedResultNonce e (Array a)
+sequenceArray : Array (LazyLoadedResult e a) -> LazyLoadedResult e (Array a)
 sequenceArray fas =
     Array.foldl (map2 Array.push) (Done Array.empty) fas
 
 
 {-| -}
-traverseArray : (a -> LazyLoadedResultNonce err b) -> Array (LazyLoadedResultNonce err a) -> LazyLoadedResultNonce err (Array b)
+traverseArray : (a -> LazyLoadedResult err b) -> Array (LazyLoadedResult err a) -> LazyLoadedResult err (Array b)
 traverseArray f =
     Array.map (andThen f) >> sequenceArray
 
 
 {-| -}
-alt : LazyLoadedResultNonce err a -> LazyLoadedResultNonce err a -> LazyLoadedResultNonce err a
+alt : LazyLoadedResult err a -> LazyLoadedResult err a -> LazyLoadedResult err a
 alt fallback result =
     altLazy (always fallback) result
 
 
 {-| -}
-altLazy : (() -> LazyLoadedResultNonce err a) -> LazyLoadedResultNonce err a -> LazyLoadedResultNonce err a
+altLazy : (() -> LazyLoadedResult err a) -> LazyLoadedResult err a -> LazyLoadedResult err a
 altLazy getFallback result =
     if not (isDone result) then
         getFallback ()
