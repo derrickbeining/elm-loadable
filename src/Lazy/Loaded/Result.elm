@@ -8,7 +8,7 @@ module Lazy.Loaded.Result exposing
     , andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, filter, filterMap, flatten, join, map, map2, map3, map4, map5, mapError, sequenceArray, sequenceList, traverseArray, traverseList
     )
 
-{-| LazyLoadedResult models data which
+{-| `LazyLoadedResult` models data which...
 
 1.  Needs to be loaded
 2.  Does _NOT_ begin loading immediately
