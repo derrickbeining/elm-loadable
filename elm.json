@@ -5,16 +5,16 @@
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
+        "Lazy.Loaded.Data",
+        "Lazy.Loaded.Result",
+        "Lazy.Reloadable.Data",
+        "Lazy.Reloadable.Result",
         "Loaded.Data",
-        "Loaded.Data.Lazy",
-        "Loaded.Data.Nonce",
-        "Loaded.Data.Nonce.Lazy",
         "Loaded.Progress",
         "Loaded.ReloadStatus",
         "Loaded.Result",
-        "Loaded.Result.Lazy",
-        "Loaded.Result.Nonce",
-        "Loaded.Result.Nonce.Lazy"
+        "Reloadable.Data",
+        "Reloadable.Result"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

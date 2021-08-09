@@ -1,7 +1,15 @@
 {
   "root": "../src",
   "tests": [
+    "Lazy.Loaded.Data",
+    "Lazy.Loaded.Result",
+    "Lazy.Reloadable.Data",
+    "Lazy.Reloadable.Result",
+    "Loaded.Data",
+    "Loaded.Progress",
+    "Loaded.ReloadStatus",
     "Loaded.Result",
-    "Loaded.Result.Lazy"
+    "Reloadable.Data",
+    "Reloadable.Result"
   ]
 }
