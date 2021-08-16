@@ -1,20 +1,14 @@
 {
     "type": "package",
-    "name": "derrickbeining/loaded",
-    "summary": "Data types modeling states of data that may need to be loaded.",
+    "name": "derrickbeining/elm-loadable",
+    "summary": "Data types modeling states of data that may need to be Loadable.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": [
-        "Lazy.Loaded.Data",
-        "Lazy.Loaded.Result",
-        "Lazy.Reloadable.Data",
-        "Lazy.Reloadable.Result",
-        "Loaded.Data",
-        "Loaded.Progress",
-        "Loaded.ReloadStatus",
-        "Loaded.Result",
-        "Reloadable.Data",
-        "Reloadable.Result"
+        "Loadable",
+        "Loadable.Lazy",
+        "Reloadable",
+        "Reloadable.Lazy"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {
