@@ -2,9 +2,10 @@ module Loadable exposing
     ( Loadable(..)
     , fromMaybe, fromResult
     , withDefault, getOrElse, getError
-    , toMaybe, toResult, toTask
+    , toList, toArray, toMaybe, toResult, toTask
     , isLoading, isError, isLoaded
     , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict
+    , toSet
     )
 
 {-|
@@ -27,7 +28,7 @@ module Loadable exposing
 
 # Folds
 
-@docs toMaybe, toResult, toTask
+@docs toList, toArray, toMaybe, toResult, toTask
 
 
 # Guards
@@ -238,6 +239,67 @@ isLoaded data =
 
 
 -- Natural Transformations
+
+
+{-| Transforms [Loadable](#Loadable) to a `List` (empty if not `Loaded`)
+
+    toList (Loading ())
+    --> []
+
+    toList (Loaded "sup")
+    ---> ["sup"])
+
+-}
+toList : Loadable loading error value -> List value
+toList data =
+    case data of
+        Loaded val ->
+            [ val ]
+
+        _ ->
+            []
+
+
+{-| Transforms [Loadable](#Loadable) to a `Array` (empty if not `Loaded`)
+
+    import Array
+
+    toArray (Loading ())
+    --> Array.fromList []
+
+    toArray (Loaded "sup")
+    ---> Array.fromList ["sup"]
+
+-}
+toArray : Loadable loading error value -> Array value
+toArray data =
+    case data of
+        Loaded val ->
+            Array.fromList [ val ]
+
+        _ ->
+            Array.empty
+
+
+{-| Transforms [Loadable](#Loadable) to a `Set` (empty if not `Loaded`)
+
+    import Set
+
+    toSet (Loading ())
+    --> Set.fromList []
+
+    toSet (Loaded "sup")
+    ---> Set.fromList ["sup"]
+
+-}
+toSet : Loadable loading error comparable -> Set comparable
+toSet data =
+    case data of
+        Loaded val ->
+            Set.fromList [ val ]
+
+        _ ->
+            Set.empty
 
 
 {-| Transforms [Loadable](#Loadable) to a [Result](https://package.elm-lang.org/packages/elm/core/latest/Result#Result),

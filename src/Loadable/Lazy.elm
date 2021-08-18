@@ -2,9 +2,10 @@ module Loadable.Lazy exposing
     ( LazyLoadable(..)
     , fromMaybe, fromResult
     , withDefault, getOrElse, getError
-    , toMaybe, toResult, toTask
+    , toList, toMaybe, toResult, toTask
     , isInitial, isLoading, isError, isLoaded
     , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, mapLoading, flatten, join, map, map2, map3, map4, map5, mapError, sequenceArray, sequenceList, traverseArray, traverseList
+    , toArray, toSet
     )
 
 {-|
@@ -27,7 +28,7 @@ module Loadable.Lazy exposing
 
 # Folds
 
-@docs toMaybe, toResult, toTask
+@docs toList, toMaybe, toResult, toTask
 
 
 # Guards
@@ -42,6 +43,7 @@ module Loadable.Lazy exposing
 -}
 
 import Array exposing (Array)
+import Set exposing (Set)
 import Task exposing (Task)
 
 
@@ -259,6 +261,67 @@ isLoaded data =
 
 
 -- Natural Transformations
+
+
+{-| Transforms [LazyLoadable](#LazyLoadable) to a `List` (empty if not `Loaded`)
+
+    toList (Loading ())
+    --> []
+
+    toList (Loaded "sup")
+    ---> ["sup"])
+
+-}
+toList : LazyLoadable loading error value -> List value
+toList data =
+    case data of
+        Loaded val ->
+            [ val ]
+
+        _ ->
+            []
+
+
+{-| Transforms [LazyLoadable](#LazyLoadable) to a `Array` (empty if not `Loaded`)
+
+    import Array
+
+    toArray (Loading ())
+    --> Array.fromList []
+
+    toArray (Loaded "sup")
+    ---> Array.fromList ["sup"]
+
+-}
+toArray : LazyLoadable loading error value -> Array value
+toArray data =
+    case data of
+        Loaded val ->
+            Array.fromList [ val ]
+
+        _ ->
+            Array.empty
+
+
+{-| Transforms [LazyLoadable](#LazyLoadable) to a `Set` (empty if not `Loaded`)
+
+    import Set
+
+    toSet (Loading ())
+    --> Set.fromList []
+
+    toSet (Loaded "sup")
+    ---> Set.fromList ["sup"])
+
+-}
+toSet : LazyLoadable loading error comparable -> Set comparable
+toSet data =
+    case data of
+        Loaded val ->
+            Set.fromList [ val ]
+
+        _ ->
+            Set.empty
 
 
 {-| Transforms [LazyLoadable](#LazyLoadable) to a [Result](https://package.elm-lang.org/packages/elm/core/latest/Result#Result),
