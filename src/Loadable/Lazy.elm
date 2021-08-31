@@ -2,10 +2,9 @@ module Loadable.Lazy exposing
     ( LazyLoadable(..)
     , fromMaybe, fromResult
     , withDefault, getOrElse, getError
-    , toList, toMaybe, toResult, toTask
+    , toList, toArray, toSet, toMaybe, toResult, toTask
     , isInitial, isLoading, isError, isLoaded
     , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, mapLoading, flatten, join, map, map2, map3, map4, map5, mapError, sequenceArray, sequenceList, traverseArray, traverseList
-    , toArray, toSet
     )
 
 {-|
@@ -28,7 +27,7 @@ module Loadable.Lazy exposing
 
 # Folds
 
-@docs toList, toMaybe, toResult, toTask
+@docs toList, toArray, toSet, toMaybe, toResult, toTask
 
 
 # Guards
