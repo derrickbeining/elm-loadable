@@ -6,6 +6,7 @@
   "scripts": {
     "test": "npx elm-verify-examples && elm-test",
     "test:watch": "chokidar \"./src/**/*.elm\" \"./tests/**/*.elm\" --initial --silent --ignore \"./tests/VerifyExamples/**\"  -c \"rimraf tests/VerifyExamples && clear && elm-verify-examples && elm-test\"",
+    "make-doc-tests": "elm-verify-examples",
     "author-docs": "elm-doc-preview"
   },
   "keywords": [
