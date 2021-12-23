@@ -4,7 +4,7 @@ module Loadable exposing
     , withDefault, getOrElse, getError
     , toList, toArray, toSet, toMaybe, toResult, toTask
     , isLoading, isError, isLoaded
-    , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict
+    , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict, traverseDictWithKey
     )
 
 {-|
@@ -37,7 +37,7 @@ module Loadable exposing
 
 # Combinators
 
-@docs alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict
+@docs alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict, traverseDictWithKey
 
 -}
 
@@ -950,30 +950,39 @@ performing an **[andThen](#andThen)** on each element before running
 
     import Dict
 
-    traverseDict (\_ v -> Loaded (String.fromInt v)) <|
+    traverseDict (Loaded << String.fromInt) <|
         Dict.fromList <|
             List.indexedMap Tuple.pair [ Loaded 1 , Loaded 2, Loaded 3 ]
     --> Loaded <| Dict.fromList <| List.indexedMap Tuple.pair [ "1" , "2", "3" ]
 
-    traverseDict (\_ v -> Loaded (String.fromInt v)) <|
+    traverseDict (Loaded << String.fromInt) <|
         Dict.fromList <|
             List.indexedMap Tuple.pair [ Loaded 1 , Loading (), Loaded 3 ]
     --> Loading ()
 
-    traverseDict (\_ v -> Loaded (String.fromInt v)) <|
+    traverseDict (Loaded << String.fromInt) <|
         Dict.fromList <|
             List.indexedMap Tuple.pair [ Loaded 1, Loading (), Error "D'oh!" ]
     --> Loading ()
 
-    traverseDict (\_ v -> Loaded (String.fromInt v)) <|
+    traverseDict (Loaded << String.fromInt) <|
         Dict.fromList <|
             List.indexedMap Tuple.pair [ Loaded 1,  Error "D'oh!", Loading () ]
     --> Error "D'oh!"
 
 -}
 traverseDict :
-    (comparable -> a -> Loadable loading err b)
+    (a -> Loadable loading err b)
     -> Dict comparable (Loadable loading err a)
     -> Loadable loading err (Dict comparable b)
 traverseDict f =
+    Dict.map (andThen << always f) >> sequenceDict
+
+
+{-| -}
+traverseDictWithKey :
+    (comparable -> a -> Loadable loading err b)
+    -> Dict comparable (Loadable loading err a)
+    -> Loadable loading err (Dict comparable b)
+traverseDictWithKey f =
     Dict.map (andThen << f) >> sequenceDict
