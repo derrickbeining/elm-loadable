@@ -1,10 +1,47 @@
 module Loadable.Lazy exposing
     ( LazyLoadable(..)
-    , fromMaybe, fromResult
+    , fromMaybe
+    , fromResult
+    , fromLazyReloadable
+    , fromLoadable
+    , fromReloadable
     , withDefault, getOrElse, getError
-    , toList, toArray, toSet, toMaybe, toResult, toTask
-    , isInitial, isLoading, isError, isLoaded
-    , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, mapLoading, flatten, join, map, map2, map3, map4, map5, mapError, sequenceArray, sequenceList, traverseArray, traverseList
+    , toLazyReloadable
+    , toLoadable
+    , toReloadable
+    , toList
+    , toArray
+    , toSet
+    , toMaybe
+    , toResult
+    , toTask
+    , isInitial
+    , isLoading
+    , isError
+    , isLoaded
+    , alt
+    , altLazy
+    , andMap
+    , andThen
+    , andThen2
+    , andThen3
+    , andThen4
+    , andThen5
+    , apply
+    , bimap
+    , mapLoading
+    , flatten
+    , join
+    , map
+    , map2
+    , map3
+    , map4
+    , map5
+    , mapError
+    , sequenceArray
+    , sequenceList
+    , traverseArray
+    , traverseList
     )
 
 {-|
@@ -17,7 +54,11 @@ module Loadable.Lazy exposing
 
 # Constructors
 
-@docs fromMaybe, fromResult
+@docs fromMaybe
+@docs fromResult
+@docs fromLazyReloadable
+@docs fromLoadable
+@docs fromReloadable
 
 
 # Destructors
@@ -25,23 +66,58 @@ module Loadable.Lazy exposing
 @docs withDefault, getOrElse, getError
 
 
-# Folds
+# Natural Transformations
 
-@docs toList, toArray, toSet, toMaybe, toResult, toTask
+@docs toLazyReloadable
+@docs toLoadable
+@docs toReloadable
+@docs toList
+@docs toArray
+@docs toSet
+@docs toMaybe
+@docs toResult
+@docs toTask
 
 
 # Guards
 
-@docs isInitial, isLoading, isError, isLoaded
+@docs isInitial
+@docs isLoading
+@docs isError
+@docs isLoaded
 
 
 # Combinators
 
-@docs alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, mapLoading, flatten, join, map, map2, map3, map4, map5, mapError, sequenceArray, sequenceList, traverseArray, traverseList
+@docs alt
+@docs altLazy
+@docs andMap
+@docs andThen
+@docs andThen2
+@docs andThen3
+@docs andThen4
+@docs andThen5
+@docs apply
+@docs bimap
+@docs mapLoading
+@docs flatten
+@docs join
+@docs map
+@docs map2
+@docs map3
+@docs map4
+@docs map5
+@docs mapError
+@docs sequenceArray
+@docs sequenceList
+@docs traverseArray
+@docs traverseList
 
 -}
 
 import Array exposing (Array)
+import Loadable exposing (Loadable(..))
+import Reloadable exposing (Reloadable)
 import Set exposing (Set)
 import Task exposing (Task)
 
@@ -58,6 +134,119 @@ type LazyLoadable loading error value
     | Loading loading
     | Error error
     | Loaded value
+
+
+{-| Attempt to convert a `LazyLoadable` value to a `Loadable` if possible
+-}
+toLoadable : LazyLoadable loading err val -> Maybe (Loadable loading err val)
+toLoadable lazyLoadable =
+    case lazyLoadable of
+        Initial ->
+            Nothing
+
+        Loading loading_ ->
+            Just <| Loadable.Loading loading_
+
+        Error err ->
+            Just <| Loadable.Error err
+
+        Loaded val ->
+            Just <| Loadable.Loaded val
+
+
+{-| Convert a `Loadable` value to a `LazyLoadable`
+-}
+fromLoadable : Loadable loading err val -> LazyLoadable loading err val
+fromLoadable loadable =
+    case loadable of
+        Loadable.Loading loading_ ->
+            Loading loading_
+
+        Loadable.Error err ->
+            Error err
+
+        Loadable.Loaded val ->
+            Loaded val
+
+
+{-| Convert a `LazyLoadable` value to a `LazyReloadable`
+-}
+toLazyReloadable :
+    LazyLoadable loading err val
+    ->
+        LazyLoadable
+            ( Maybe err, Maybe value, loading )
+            ( err, Maybe val )
+            val
+toLazyReloadable lazyLoadable =
+    case lazyLoadable of
+        Initial ->
+            Initial
+
+        Loading loading_ ->
+            Loading ( Nothing, Nothing, loading_ )
+
+        Error err ->
+            Error ( err, Nothing )
+
+        Loaded val ->
+            Loaded val
+
+
+{-| Convert a `LazyReloadable` value to a `LazyLoadable`
+-}
+fromLazyReloadable :
+    LazyLoadable
+        ( Maybe err, Maybe val, loading )
+        ( err, Maybe val )
+        val
+    -> LazyLoadable loading err val
+fromLazyReloadable lazyReloadable =
+    case lazyReloadable of
+        Initial ->
+            Initial
+
+        Loading ( _, _, loading_ ) ->
+            Loading loading_
+
+        Error ( err, _ ) ->
+            Error err
+
+        Loaded val ->
+            Loaded val
+
+
+{-| Convert a `LazyLoadable` value to a `Reloadable` if possible
+-}
+toReloadable : LazyLoadable loading err val -> Maybe (Reloadable loading err val)
+toReloadable lazyLoadable =
+    case lazyLoadable of
+        Initial ->
+            Nothing
+
+        Loading loading_ ->
+            Just <| Reloadable.loading Nothing Nothing loading_
+
+        Error err ->
+            Just <| Reloadable.error err Nothing
+
+        Loaded val ->
+            Just <| Reloadable.loaded val
+
+
+{-| Convert a `Reloadable` value to a `LazyLoadable`
+-}
+fromReloadable : Reloadable loading err val -> LazyLoadable loading err val
+fromReloadable reloadable =
+    case reloadable of
+        Loadable.Loading ( _, _, loading_ ) ->
+            Loading loading_
+
+        Loadable.Error ( err, _ ) ->
+            Error err
+
+        Loadable.Loaded val ->
+            Loaded val
 
 
 

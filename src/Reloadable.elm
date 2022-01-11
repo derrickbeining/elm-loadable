@@ -1,6 +1,9 @@
 module Reloadable exposing
     ( Reloadable
+    , loading, error, loaded
+    , fromLoadable
     , isRetrying, isReloading, isReloadError, isRetryingReload
+    , toLoadable
     , toMaybe
     , toResult
     , toList
@@ -22,6 +25,12 @@ module Reloadable exposing
 @docs Reloadable
 
 
+# Constructors
+
+@docs loading, error, loaded
+@docs fromLoadable
+
+
 # Guards
 
 @docs isRetrying, isReloading, isReloadError, isRetryingReload
@@ -29,6 +38,7 @@ module Reloadable exposing
 
 # Natural Transformations
 
+@docs toLoadable
 @docs toMaybe
 @docs toResult
 @docs toList
@@ -84,6 +94,54 @@ type alias Reloadable loading err val =
         ( Maybe err, Maybe val, loading )
         ( err, Maybe val )
         val
+
+
+{-| -}
+loading : Maybe err -> Maybe val -> loading -> Reloadable loading err val
+loading mErr mVal loading_ =
+    Loading ( mErr, mVal, loading_ )
+
+
+{-| -}
+error : err -> Maybe val -> Reloadable loading err val
+error err mVal =
+    Error ( err, mVal )
+
+
+{-| -}
+loaded : val -> Reloadable loading err val
+loaded =
+    Loaded
+
+
+{-| Convert a `Reloadable` value to a `Loadable`
+-}
+toLoadable : Reloadable loading err val -> Loadable loading err val
+toLoadable reloadable =
+    case reloadable of
+        Loading ( _, _, loading_ ) ->
+            Loading loading_
+
+        Error ( err, _ ) ->
+            Error err
+
+        Loaded val ->
+            Loaded val
+
+
+{-| Convert a `Loadable` value to a `Reloadable`
+-}
+fromLoadable : Loadable loading err val -> Reloadable loading err val
+fromLoadable loadable =
+    case loadable of
+        Loading loading_ ->
+            Loading ( Nothing, Nothing, loading_ )
+
+        Error err ->
+            Error ( err, Nothing )
+
+        Loaded val ->
+            Loaded val
 
 
 {-| Predicates that the data is `Loading` after having previously
@@ -316,8 +374,8 @@ toResult onLoading loadable =
         Loading ( Nothing, Just val, _ ) ->
             Result.Ok val
 
-        Loading ( Nothing, Nothing, loading ) ->
-            onLoading loading |> Result.mapError (\e -> ( e, Nothing ))
+        Loading ( Nothing, Nothing, loading_ ) ->
+            onLoading loading_ |> Result.mapError (\e -> ( e, Nothing ))
 
         Error err ->
             Result.Err err
@@ -398,8 +456,8 @@ toTask :
     -> Task ( err, Maybe value ) value
 toTask onLoading result =
     case result of
-        Loading ( Nothing, Nothing, loading ) ->
-            onLoading loading |> Task.mapError (\e -> ( e, Nothing ))
+        Loading ( Nothing, Nothing, loading_ ) ->
+            onLoading loading_ |> Task.mapError (\e -> ( e, Nothing ))
 
         Loading ( Just err, mVal, _ ) ->
             Task.fail ( err, mVal )
@@ -434,8 +492,8 @@ toTask onLoading result =
 map : (a -> b) -> Reloadable loading err a -> Reloadable loading err b
 map f data =
     case data of
-        Loading ( err0, val0, loading ) ->
-            Loading ( err0, Maybe.map f val0, loading )
+        Loading ( err0, val0, loading_ ) ->
+            Loading ( err0, Maybe.map f val0, loading_ )
 
         Error ( err, lastVal ) ->
             Error ( err, Maybe.map f lastVal )
@@ -463,8 +521,8 @@ mapError :
     -> Reloadable loading errB a
 mapError f result =
     case result of
-        Loading ( err0, val, loading ) ->
-            Loading ( Maybe.map f err0, val, loading )
+        Loading ( err0, val, loading_ ) ->
+            Loading ( Maybe.map f err0, val, loading_ )
 
         Error ( err, mVal ) ->
             Error ( f err, mVal )
@@ -519,8 +577,8 @@ mapLoading :
     -> Reloadable loadingB err a
 mapLoading f result =
     case result of
-        Loading ( e, a, loading ) ->
-            Loading ( e, a, f loading )
+        Loading ( e, a, loading_ ) ->
+            Loading ( e, a, f loading_ )
 
         Error err ->
             Error err

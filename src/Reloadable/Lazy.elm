@@ -1,5 +1,12 @@
 module Reloadable.Lazy exposing
     ( LazyReloadable
+    , initial, loading, error, loaded
+    , fromLazyLoadable
+    , fromLoadable
+    , fromReloadable
+    , toLazyLoadable
+    , toLoadable
+    , toReloadable
     , toMaybe
     , toResult
     , toList
@@ -21,8 +28,19 @@ module Reloadable.Lazy exposing
 @docs LazyReloadable
 
 
+# Constructors
+
+@docs initial, loading, error, loaded
+@docs fromLazyLoadable
+@docs fromLoadable
+@docs fromReloadable
+
+
 # Natural Transformations
 
+@docs toLazyLoadable
+@docs toLoadable
+@docs toReloadable
 @docs toMaybe
 @docs toResult
 @docs toList
@@ -41,7 +59,9 @@ module Reloadable.Lazy exposing
 -}
 
 import Array exposing (Array)
+import Loadable exposing (Loadable)
 import Loadable.Lazy exposing (LazyLoadable(..))
+import Reloadable exposing (Reloadable)
 import Set exposing (Set)
 import Task exposing (Task)
 
@@ -57,6 +77,132 @@ type alias LazyReloadable loading error value =
         ( Maybe error, Maybe value, loading )
         ( error, Maybe value )
         value
+
+
+{-| -}
+initial : LazyReloadable loading error value
+initial =
+    Initial
+
+
+{-| -}
+loading : Maybe err -> Maybe val -> loading -> LazyReloadable loading err val
+loading mErr mVal loading_ =
+    Loading ( mErr, mVal, loading_ )
+
+
+{-| -}
+error : err -> Maybe val -> LazyReloadable loading err val
+error err mVal =
+    Error ( err, mVal )
+
+
+{-| -}
+loaded : val -> LazyReloadable loading err val
+loaded =
+    Loaded
+
+
+{-| Attempt to convert a `LazyReloadable` value to a `Loadable` if possible
+-}
+toLoadable : LazyReloadable loading err val -> Maybe (Loadable loading err val)
+toLoadable reloadable =
+    case reloadable of
+        Initial ->
+            Nothing
+
+        Loading ( _, _, loading_ ) ->
+            Just <| Loadable.Loading loading_
+
+        Error ( err, _ ) ->
+            Just <| Loadable.Error err
+
+        Loaded val ->
+            Just <| Loadable.Loaded val
+
+
+{-| Convert a `Loadable` value to a `LazyReloadable`
+-}
+fromLoadable : Loadable loading err val -> LazyReloadable loading err val
+fromLoadable loadable =
+    case loadable of
+        Loadable.Loading loading_ ->
+            Loading ( Nothing, Nothing, loading_ )
+
+        Loadable.Error err ->
+            Error ( err, Nothing )
+
+        Loadable.Loaded val ->
+            Loaded val
+
+
+{-| Convert a `LazyReloadable` value to a `LazyLoadable`
+-}
+toLazyLoadable : LazyReloadable loading err val -> LazyLoadable loading err val
+toLazyLoadable reloadable =
+    case reloadable of
+        Initial ->
+            Initial
+
+        Loading ( _, _, loading_ ) ->
+            Loading loading_
+
+        Error ( err, _ ) ->
+            Error err
+
+        Loaded val ->
+            Loaded val
+
+
+{-| Convert a `LazyLoadable` value to a `LazyReloadable`
+-}
+fromLazyLoadable : LazyLoadable loading err val -> LazyReloadable loading err val
+fromLazyLoadable loadable =
+    case loadable of
+        Initial ->
+            Initial
+
+        Loading loading_ ->
+            Loading ( Nothing, Nothing, loading_ )
+
+        Error err ->
+            Error ( err, Nothing )
+
+        Loaded val ->
+            Loaded val
+
+
+{-| Convert a `LazyReloadable` value to a `Reloadable` if possible
+-}
+toReloadable : LazyReloadable loading err val -> Maybe (Reloadable loading err val)
+toReloadable reloadable =
+    case reloadable of
+        Initial ->
+            Nothing
+
+        Loading ( mErr, mVal, loading_ ) ->
+            Just <| Reloadable.loading mErr mVal loading_
+
+        Error ( err, mVal ) ->
+            Just <| Reloadable.error err mVal
+
+        Loaded val ->
+            Just <| Reloadable.loaded val
+
+
+{-| Convert a `LazyLoadable` value to a `LazyReloadable`
+-}
+fromReloadable : Reloadable loading err val -> LazyReloadable loading err val
+fromReloadable reloadable =
+    case reloadable of
+        Loadable.Loading ( mErr, mVal, loading_ ) ->
+            loading mErr mVal loading_
+
+        Loadable.Error ( err, mVal ) ->
+            error err mVal
+
+        Loadable.Loaded val ->
+            loaded val
 
 
 
@@ -204,8 +350,8 @@ toResult mkFallback loadable =
         Loading ( Nothing, Just val, _ ) ->
             Result.Ok val
 
-        Loading ( Nothing, Nothing, loading ) ->
-            mkFallback (Just loading) |> Result.mapError (\e -> ( e, Nothing ))
+        Loading ( Nothing, Nothing, loading_ ) ->
+            mkFallback (Just loading_) |> Result.mapError (\e -> ( e, Nothing ))
 
         Error err ->
             Result.Err err
@@ -289,8 +435,8 @@ toTask mkFallback result =
         Initial ->
             mkFallback Nothing |> Task.mapError (\e -> ( e, Nothing ))
 
-        Loading ( Nothing, Nothing, loading ) ->
-            mkFallback (Just loading) |> Task.mapError (\e -> ( e, Nothing ))
+        Loading ( Nothing, Nothing, loading_ ) ->
+            mkFallback (Just loading_) |> Task.mapError (\e -> ( e, Nothing ))
 
         Loading ( Just err, mVal, _ ) ->
             Task.fail ( err, mVal )
@@ -328,8 +474,8 @@ map f data =
         Initial ->
             Initial
 
-        Loading ( err0, val0, loading ) ->
-            Loading ( err0, Maybe.map f val0, loading )
+        Loading ( err0, val0, loading_ ) ->
+            Loading ( err0, Maybe.map f val0, loading_ )
 
         Error ( err, lastVal ) ->
             Error ( err, Maybe.map f lastVal )
@@ -360,8 +506,8 @@ mapError f result =
         Initial ->
             Initial
 
-        Loading ( err0, val, loading ) ->
-            Loading ( Maybe.map f err0, val, loading )
+        Loading ( err0, val, loading_ ) ->
+            Loading ( Maybe.map f err0, val, loading_ )
 
         Error ( err, mVal ) ->
             Error ( f err, mVal )
@@ -419,8 +565,8 @@ mapLoading f result =
         Initial ->
             Initial
 
-        Loading ( e, a, loading ) ->
-            Loading ( e, a, f loading )
+        Loading ( e, a, loading_ ) ->
+            Loading ( e, a, f loading_ )
 
         Error err ->
             Error err
