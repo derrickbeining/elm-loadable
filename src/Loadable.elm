@@ -4,7 +4,33 @@ module Loadable exposing
     , withDefault, getOrElse, getError
     , toList, toArray, toSet, toMaybe, toResult, toTask
     , isLoading, isError, isLoaded
-    , alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict, traverseDictWithKey
+    , alt
+    , altLazy
+    , andMap
+    , andThen
+    , andThen2
+    , andThen3
+    , andThen4
+    , andThen5
+    , apply
+    , bimap
+    , flatten
+    , join
+    , map
+    , map2
+    , map3
+    , map4
+    , map5
+    , mapError
+    , mapLoading
+    , sequenceArray
+    , sequenceList
+    , traverseArray
+    , traverseList
+    , sequenceDict
+    , traverseDict
+    , traverseDictWithKey
+    , sequenceTriple, sequenceTuple
     )
 
 {-|
@@ -37,7 +63,32 @@ module Loadable exposing
 
 # Combinators
 
-@docs alt, altLazy, andMap, andThen, andThen2, andThen3, andThen4, andThen5, apply, bimap, flatten, join, map, map2, map3, map4, map5, mapError, mapLoading, sequenceArray, sequenceList, traverseArray, traverseList, sequenceDict, traverseDict, traverseDictWithKey
+@docs alt
+@docs altLazy
+@docs andMap
+@docs andThen
+@docs andThen2
+@docs andThen3
+@docs andThen4
+@docs andThen5
+@docs apply
+@docs bimap
+@docs flatten
+@docs join
+@docs map
+@docs map2
+@docs map3
+@docs map4
+@docs map5
+@docs mapError
+@docs mapLoading
+@docs sequenceArray
+@docs sequenceList
+@docs traverseArray
+@docs traverseList
+@docs sequenceDict
+@docs traverseDict
+@docs traverseDictWithKey
 
 -}
 
@@ -986,3 +1037,53 @@ traverseDictWithKey :
     -> Loadable loading err (Dict comparable b)
 traverseDictWithKey f =
     Dict.map (andThen << f) >> sequenceDict
+
+
+{-| Turn a **`(LazyLoadable l e a, LazyLoadable l e b)`** into a **`LazyLoadable l e (a, b)`**,
+resulting in the first non-**`Loaded`** element. Only if all elements are
+**`Loaded`** will the result be **`Loaded`**.
+
+    sequenceTuple ( Loaded 1 , Loaded 2 )
+    --> Loaded (1, 2)
+
+    sequenceTuple ( Loaded 1 , Loading () )
+    --> Loading ()
+
+    sequenceTuple ( Loaded 1, Loading () )
+    --> Loading ()
+
+    sequenceTuple ( Loaded 1,  Error "D'oh!" )
+    --> Error "D'oh!"
+
+-}
+sequenceTuple :
+    ( Loadable loading err a
+    , Loadable loading err b
+    )
+    -> Loadable loading err ( a, b )
+sequenceTuple ( fa, fb ) =
+    map2 Tuple.pair fa fb
+
+
+{-| Turn a **`(Loadable l e a, Loadable l e b, Loadable l e c)`** into a **`Loadable l e (a, b, c)`**,
+resulting in the first non-**`Loaded`** element. Only if all elements are
+**`Loaded`** will the result be **`Loaded`**.
+
+    sequenceTriple ( Loaded 1 , Loaded 2, Loaded 3 )
+    --> Loaded (1, 2, 3)
+
+    sequenceTriple ( Loaded 1 , Loading (), Loaded 3 )
+    --> Loading ()
+
+    sequenceTriple ( Error "D'oh!", Loaded 2, Loaded 3 )
+    --> Error "D'oh!"
+
+-}
+sequenceTriple :
+    ( Loadable loading err a
+    , Loadable loading err b
+    , Loadable loading err c
+    )
+    -> Loadable loading err ( a, b, c )
+sequenceTriple ( fa, fb, fc ) =
+    map3 (\a b c -> ( a, b, c )) fa fb fc

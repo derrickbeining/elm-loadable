@@ -40,6 +40,8 @@ module Loadable.Lazy exposing
     , mapError
     , sequenceArray
     , sequenceList
+    , sequenceTuple
+    , sequenceTriple
     , traverseArray
     , traverseList
     )
@@ -110,6 +112,8 @@ module Loadable.Lazy exposing
 @docs mapError
 @docs sequenceArray
 @docs sequenceList
+@docs sequenceTuple
+@docs sequenceTriple
 @docs traverseArray
 @docs traverseList
 
@@ -1051,6 +1055,59 @@ andThen5 f fa fb fc fd fe =
         |> apply fd
         |> apply fe
         |> flatten
+
+
+{-| Turn a **`(LazyLoadable l e a, LazyLoadable l e b)`** into a **`LazyLoadable l e (a, b)`**,
+resulting in the first non-**`Loaded`** element. Only if all elements are
+**`Loaded`** will the result be **`Loaded`**.
+
+    sequenceTuple ( Loaded 1 , Loaded 2 )
+    --> Loaded (1, 2)
+
+    sequenceTuple ( Loaded 1 , Loading () )
+    --> Loading ()
+
+    sequenceTuple ( Loaded 1, Loading () )
+    --> Loading ()
+
+    sequenceTuple ( Loaded 1,  Error "D'oh!" )
+    --> Error "D'oh!"
+
+-}
+sequenceTuple :
+    ( LazyLoadable loading err a
+    , LazyLoadable loading err b
+    )
+    -> LazyLoadable loading err ( a, b )
+sequenceTuple ( fa, fb ) =
+    map2 Tuple.pair fa fb
+
+
+{-| Turn a **`(LazyLoadable l e a, LazyLoadable l e b, LazyLoadable l e c)`** into a **`LazyLoadable l e (a, b, c)`**,
+resulting in the first non-**`Loaded`** element. Only if all elements are
+**`Loaded`** will the result be **`Loaded`**.
+
+    sequenceTriple ( Loaded 1 , Loaded 2, Loaded 3 )
+    --> Loaded (1, 2, 3)
+
+    sequenceTriple ( Loaded 1 , Loading (), Loaded 3 )
+    --> Loading ()
+
+    sequenceTriple ( Loaded 1, Loaded 2, Initial )
+    --> Initial
+
+    sequenceTriple ( Error "D'oh!", Loaded 2, Loaded 3 )
+    --> Error "D'oh!"
+
+-}
+sequenceTriple :
+    ( LazyLoadable loading err a
+    , LazyLoadable loading err b
+    , LazyLoadable loading err c
+    )
+    -> LazyLoadable loading err ( a, b, c )
+sequenceTriple ( fa, fb, fc ) =
+    map3 (\a b c -> ( a, b, c )) fa fb fc
 
 
 {-| Turn a **`List (LazyLoadable l e a)`** into a **`LazyLoadable l e (List a)`**,
