@@ -25,12 +25,13 @@ module Loadable exposing
     , mapLoading
     , sequenceArray
     , sequenceList
+    , sequenceDict
+    , sequenceTuple
+    , sequenceTriple
     , traverseArray
     , traverseList
-    , sequenceDict
     , traverseDict
     , traverseDictWithKey
-    , sequenceTriple, sequenceTuple
     )
 
 {-|
@@ -84,9 +85,11 @@ module Loadable exposing
 @docs mapLoading
 @docs sequenceArray
 @docs sequenceList
+@docs sequenceDict
+@docs sequenceTuple
+@docs sequenceTriple
 @docs traverseArray
 @docs traverseList
-@docs sequenceDict
 @docs traverseDict
 @docs traverseDictWithKey
 
